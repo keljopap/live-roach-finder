@@ -1,0 +1,6 @@
+.env
+output/*
+.venv/*
+
+frontend/map-frontend/node_modules
+frontend/map-frontend/.env

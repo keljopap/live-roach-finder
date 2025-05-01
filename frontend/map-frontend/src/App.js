@@ -1,5 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/api";
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  GoogleMap,
+  LoadScript,
+  Marker,
+  InfoWindow,
+} from "@react-google-maps/api";
 import axios from "axios";
 
 const containerStyle = {
@@ -7,9 +12,25 @@ const containerStyle = {
   height: '100vh'
 };
 
+function getColorByScore(score) {
+  if (score <= 0) return '#00FF00';
+  if (score <= 4) return '#7CFC00';
+  if (score <= 9) return '#228B22';
+  if (score <= 13) return '#006400';
+  if (score <= 18) return '#FFFF00';
+  if (score <= 22) return '#FFD700';
+  if (score <= 27) return '#FFFACD';
+  if (score <= 40) return '#FFA07A';
+  if (score <= 60) return '#FF4500';
+  return '#8B0000';
+}
+
 function App() {
   const [markers, setMarkers] = useState([]);
   const [activeMarker, setActiveMarker] = useState(null);
+
+  // Default center coordinates (NYC City Hall)
+  const center = useMemo(() => ({ lat: 40.7128, lng: -74.0060 }), []);
 
   useEffect(() => {
     async function fetchBusinessesAndCoordinates() {
@@ -70,7 +91,7 @@ function App() {
             mapContainerStyle={containerStyle}
             zoom={11}
             onClick={() => setActiveMarker(null)} // close info window when clicking on map
-            center={{lat: 40.7128, lng: -74.0060}} // Default center (New York City)
+            center={center}
             options={{
               mapTypeControl: true,
               streetViewControl: true,
@@ -83,7 +104,16 @@ function App() {
                   key={idx}
                   position={{lat: marker.lat, lng: marker.lng}}
                   label={`${idx + 1}`}
+                  title={marker.name}
                   onClick={() => handleActiveMarker(idx)}
+                  icon={{ 
+                    path: window.google?.maps?.SymbolPath?.CIRCLE,
+                    scale: 12,
+                    fillColor: getColorByScore(marker.score),
+                    fillOpacity: 1,
+                    strokeWeight: 1,
+                    strokeColor: 'white',
+                  }}
               >
                 {activeMarker === idx ? (
                     <InfoWindow onCloseClick={() => setActiveMarker(null)}>
@@ -91,6 +121,13 @@ function App() {
                         <h3>{marker.name}</h3>
                         <p><strong>Address:</strong> {marker.unit ? `${marker.unit}, ` : ""}{marker.address}</p>
                         <p><strong>Violation:</strong> {marker.violationSummary}</p>
+                        <p><strong>Violation Count:</strong>{marker.violationCount}</p>
+                        <p><strong>Grade History:</strong>{marker.grade}</p>
+                        <p><strong>Average Score Over Time:</strong>{marker.score}</p>
+                        <p><strong>Cuisine:</strong>{marker.cuisineDescription}</p>
+                        <p><strong>Last Inspection Date:</strong> {marker.inspectionDate}</p>
+                        <p><strong>Latitude:</strong> {marker.lat}</p>
+                        <p><strong>Longitude:</strong> {marker.lng}</p>
                       </div>
                     </InfoWindow>
                 ) : null}

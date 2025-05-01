@@ -64,6 +64,7 @@ def init_businesses_for_whole_dataframe():
             "score": row['SCORE'],
             "latitude": latitude,
             "longitude": longitude,
+            "grade": row['GRADE'],
         }
         businesses.append(business)
 
@@ -78,7 +79,7 @@ if __name__ == '__main__':
         'CAMIS','DBA','BORO',
         'BUILDING','STREET','ZIPCODE',
         'CUISINE DESCRIPTION','VIOLATION DESCRIPTION',
-        'INSPECTION DATE','SCORE',
+        'INSPECTION DATE','SCORE','GRADE',
         'Latitude','Longitude'
     ]]
 
@@ -96,7 +97,7 @@ if __name__ == '__main__':
     print(df.shape)
 
     # optionally filter by zip code
-    # df = df[df['ZIPCODE'] == 10003]
+    # df = df[df['ZIPCODE'] == 11101]
 
     # create a new dataframe that groups all violations by CAMIS
     df_grouped = df.groupby(by="CAMIS").agg(
@@ -111,6 +112,7 @@ if __name__ == '__main__':
         SCORE=('SCORE', 'mean'),
         LATITUDE=('Latitude', 'mean'), # really should be first ha, just curious if they're ever different
         LONGITUDE=('Longitude', 'mean'),
+        GRADE=('GRADE', lambda x: ','.join(str(x) for x in x.unique()))
     )
 
     df_grouped['VIOLATIONCOUNTS'] = df_grouped['VIOLATIONDESCRIPTION'].apply(lambda x: len(x.split('\n-')) - 1)
@@ -119,7 +121,7 @@ if __name__ == '__main__':
     df_grouped = df_grouped.sort_values(by='VIOLATIONCOUNTS', ascending=False)
 
     # filter out businesses with x+ violations
-    numViolations = 20
+    numViolations = 30
     df_grouped = df_grouped[df_grouped['VIOLATIONCOUNTS'] >= numViolations]
     print(f"Filtered businesses with {numViolations} or more violations: {df_grouped.shape[0]}")
     print(df_grouped.head(20))
